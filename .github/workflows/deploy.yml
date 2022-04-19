@@ -69,7 +69,7 @@ jobs:
         id: package_version
         run: echo ::set-output name=VERSION::`ship project:get version`
       - name: Fail if the tags aren't equal
-        if: ${{ steps.tag_version.outputs.VERSION }} != ${{ steps.package_version.outputs.VERSION }}
+        if: ${{ (!(steps.tag_version.outputs.VERSION == steps.package_version.outputs.VERSION)) }}
         uses: actions/github-script@v3
         with:
           script: |
@@ -81,7 +81,7 @@ jobs:
         id: package_type
         run: echo ::set-output name=TYPE::`ship project:get type`
       - name: Require valid type
-        if: ((${{ steps.package_type.outputs.TYPE }} != "plugin") && (${{ steps.package_type.outputs.TYPE }} != "app"))
+        if: ${{ ((!(steps.package_type.outputs.TYPE == "plugin")) && (!(steps.package_type.outputs.TYPE == "app"))) }}
         uses: actions/github-script@v3
         with:
           script: |
@@ -89,7 +89,7 @@ jobs:
 
       # Maybe Deploy the Plugin
       - name: Deploy Plugin
-        if: ((${{ steps.tag_version.outputs.VERSION }} == ${{ steps.package_version.outputs.VERSION }}) && (${{ steps.package_type.outputs.TYPE }} == "plugin"))
+        if: ${{ ((steps.tag_version.outputs.VERSION == steps.package_version.outputs.VERSION) && (steps.package_type.outputs.TYPE == "plugin")) }}
         uses: actions/github-script@v3
         with:
           script: |
@@ -97,7 +97,7 @@ jobs:
 
       # Maybe Deploy the App
       - name: Deploy App
-        if: ((${{ steps.tag_version.outputs.VERSION }} == ${{ steps.package_version.outputs.VERSION }}) && (${{ steps.package_type.outputs.TYPE }} == "app"))
+        if: ${{ ((steps.tag_version.outputs.VERSION == steps.package_version.outputs.VERSION) && (steps.package_type.outputs.TYPE == "app")) }}
         uses: actions/github-script@v3
         with:
           script: |
