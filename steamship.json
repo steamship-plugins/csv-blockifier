@@ -1,8 +1,8 @@
 {
-  "type": "plugin",
+  "type": "project",
   "name": "blockifier-csv",
   "handle": "blockifier-csv",
-  "version": "0.0.3",
+  "version": "0.0.10",
   "description": "",
   "author": "",
   "public": true,

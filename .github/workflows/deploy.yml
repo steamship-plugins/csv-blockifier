@@ -54,8 +54,11 @@ jobs:
           node-version: "14"
       - name: Install Steamship CLI
         run: npm install -g @steamship/cli
-      - name: Test Ship
-        run: ship
+
+      # Sanity Check:
+      #   If the STEAMSHIP_API_KEY variable isn't present, the output of this step will help debug that.
+      - name: Test Steamship Authentication
+        run: ship user:info
 
       # Sanity Check:
       #   Tag Version should match Steamship.json version
@@ -84,6 +87,7 @@ jobs:
           script: |
               core.setFailed("The package type (${{ steps.package_type.outputs.TYPE }}) must be 'plugin' or 'app' to deploy via this action.")
 
+      # Maybe Deploy the Plugin
       - name: Deploy Plugin
         if: ((${{ steps.tag_version.outputs.VERSION }} == ${{ steps.package_version.outputs.VERSION }}) && (${{ steps.package_type.outputs.TYPE }} == "plugin"))
         uses: actions/github-script@v3
@@ -91,6 +95,7 @@ jobs:
           script: |
               core.setFailed("Deploy Plugin")
 
+      # Maybe Deploy the App
       - name: Deploy App
         if: ((${{ steps.tag_version.outputs.VERSION }} == ${{ steps.package_version.outputs.VERSION }}) && (${{ steps.package_type.outputs.TYPE }} == "app"))
         uses: actions/github-script@v3
