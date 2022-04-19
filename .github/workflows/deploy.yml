@@ -62,18 +62,19 @@ jobs:
 
       # Sanity Check:
       #   Tag Version should match Steamship.json version
-      - name: Get the Tag Version
-        id: tag_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\/v/}
-      - name: Get the Package Version
-        id: package_version
-        run: echo ::set-output name=VERSION::`ship project:get version`
+      - name: Get Tag Versions
+        id: versions
+        run: |
+          TAG_VERSION=${GITHUB_REF/refs\/tags\/v/}
+          PKG_VERSION=`ship project:get version`
+          echo "::set-output name=TAG::$TAG_VERSION"
+          echo "::set-output name=PKG::$PKG_VERSION"
       - name: Fail if the tags aren't equal
-        if: (!(${{steps.tag_version.outputs.VERSION}} == ${{steps.package_version.outputs.VERSION}}))
+        if: !(${{steps.versions.outputs.TAG}} == ${{steps.versions.outputs.PKG}})
         uses: actions/github-script@v3
         with:
           script: |
-              core.setFailed("The tag version (${{ steps.tag_version.outputs.VERSION }}) and the steamship.json version (${{ steps.package_version.outputs.VERSION }}) are different.")
+              core.setFailed("The tag version (${{ steps.versions.outputs.TAG }}) and the steamship.json version (${{ steps.versions.outputs.PKG }}) are different.")
 
       # Sanity Check:
       #   Steamship.json type should be plugin or app
