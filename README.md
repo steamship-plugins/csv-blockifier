@@ -40,3 +40,4 @@ file.query(blockType=BlockTypes.Paragraph).wait().data
 
 This plugin is hosted and ready to use without any development on your part. 
 But if you wish to contribute to it or use it as a starting place for your own plugin, see DEVELOPING.md.
+
