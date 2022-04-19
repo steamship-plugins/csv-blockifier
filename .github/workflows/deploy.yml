@@ -80,9 +80,11 @@ jobs:
       #   Steamship.json type should be plugin or app
       - name: Get the Package Type
         id: package_type
-        run: echo ::set-output name=TYPE::`ship project:get type`
+        run: |
+          PKG_TYPE=`ship project:get type`
+          echo "::set-output name=TPE::$PKG_TYPE"
       - name: Require valid type
-        if: ((!(${{steps.package_type.outputs.TYPE}} == "plugin")) && (!(${{steps.package_type.outputs.TYPE}} == "app")))
+        if: ${{ (!((steps.package_type.outputs.TPE == "plugin") || (steps.package_type.outputs.TPE == "app"))) }}
         uses: actions/github-script@v3
         with:
           script: |
@@ -90,7 +92,7 @@ jobs:
 
       # Maybe Deploy the Plugin
       - name: Deploy Plugin
-        if: ((${{steps.tag_version.outputs.VERSION}} == ${{steps.package_version.outputs.VERSION}}) && (${{steps.package_type.outputs.TYPE}} == "plugin"))
+        if: ${{ steps.package_type.outputs.TPE == "plugin" }}
         uses: actions/github-script@v3
         with:
           script: |
@@ -98,7 +100,7 @@ jobs:
 
       # Maybe Deploy the App
       - name: Deploy App
-        if: ((${{steps.tag_version.outputs.VERSION}} == ${{steps.package_version.outputs.VERSION}}) && (${{steps.package_type.outputs.TYPE}} == "app"))
+        if: ${{ steps.package_type.outputs.TPE == "app" }}
         uses: actions/github-script@v3
         with:
           script: |
