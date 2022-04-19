@@ -70,7 +70,7 @@ jobs:
           echo "::set-output name=TAG::$TAG_VERSION"
           echo "::set-output name=PKG::$PKG_VERSION"
       - name: Fail if the tags aren't equal
-        if: !(${{steps.versions.outputs.TAG}} == ${{steps.versions.outputs.PKG}})
+        if: ${{ (!(steps.versions.outputs.TAG == steps.versions.outputs.PKG)) }}
         uses: actions/github-script@v3
         with:
           script: |

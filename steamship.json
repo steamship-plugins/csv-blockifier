@@ -2,7 +2,7 @@
   "type": "project",
   "name": "blockifier-csv",
   "handle": "blockifier-csv",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "",
   "author": "",
   "public": true,
