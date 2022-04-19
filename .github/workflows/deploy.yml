@@ -22,8 +22,8 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
 
 jobs:
-  test:
-    name: Run Unit Tests
+  deploy:
+    name: Test & Deploy to Steamship
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -48,12 +48,6 @@ jobs:
       - name: Run test suite
         run: |
           pytest
-  deploy:
-    needs: test
-    name: Deploy to Steamship
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
@@ -62,6 +56,9 @@ jobs:
         run: npm install -g @steamship/cli
       - name: Test Ship
         run: ship
+
+      # Sanity Check:
+      #   Tag Version should match Steamship.json version
       - name: Get the Tag Version
         id: tag_version
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\/v/}
@@ -75,9 +72,28 @@ jobs:
           script: |
               core.setFailed("The tag version (${{ steps.tag_version.outputs.VERSION }}) and the steamship.json version (${{ steps.package_version.outputs.VERSION }}) are different.")
 
-      - name: Fail if the tags are the same, with a different output message.
-        if: ${{ steps.tag_version.outputs.VERSION }} == ${{ steps.package_version.outputs.VERSION }}
+      # Sanity Check:
+      #   Steamship.json type should be plugin or app
+      - name: Get the Package Type
+        id: package_type
+        run: echo ::set-output name=TYPE::`ship project:get type`
+      - name: Require valid type
+        if: ((${{ steps.package_type.outputs.TYPE }} != "plugin") && (${{ steps.package_type.outputs.TYPE }} != "app"))
         uses: actions/github-script@v3
         with:
           script: |
-              core.setFailed("The tag version (${{ steps.tag_version.outputs.VERSION }}) and the steamship.json version (${{ steps.package_version.outputs.VERSION }}) are the same.")
+              core.setFailed("The package type (${{ steps.package_type.outputs.TYPE }}) must be 'plugin' or 'app' to deploy via this action.")
+
+      - name: Deploy Plugin
+        if: ((${{ steps.tag_version.outputs.VERSION }} == ${{ steps.package_version.outputs.VERSION }}) && (${{ steps.package_type.outputs.TYPE }} == "plugin"))
+        uses: actions/github-script@v3
+        with:
+          script: |
+              core.setFailed("Deploy Plugin")
+
+      - name: Deploy App
+        if: ((${{ steps.tag_version.outputs.VERSION }} == ${{ steps.package_version.outputs.VERSION }}) && (${{ steps.package_type.outputs.TYPE }} == "app"))
+        uses: actions/github-script@v3
+        with:
+          script: |
+              core.setFailed("Deploy App")
