@@ -82,9 +82,13 @@ jobs:
         id: package_type
         run: |
           PKG_TYPE=`ship project:get type`
+          TYPE_PLG=plugin
+          TYPE_APP=app
           echo "::set-output name=TPE::$PKG_TYPE"
+          echo "::set-output name=PLG::$TYPE_PLG"
+          echo "::set-output name=APP::$TYPE_APP"
       - name: Require valid type
-        if: ${{ (!((steps.package_type.outputs.TPE == "plugin") || (steps.package_type.outputs.TPE == "app"))) }}
+        if: ${{ (!((steps.package_type.outputs.TPE == steps.package_type.outputs.PLG) || (steps.package_type.outputs.TPE == steps.package_type.outputs.APP))) }}
         uses: actions/github-script@v3
         with:
           script: |
@@ -92,7 +96,7 @@ jobs:
 
       # Maybe Deploy the Plugin
       - name: Deploy Plugin
-        if: ${{ steps.package_type.outputs.TPE == "plugin" }}
+        if: ${{ steps.package_type.outputs.TPE == steps.package_type.outputs.PLG }}
         uses: actions/github-script@v3
         with:
           script: |
@@ -100,7 +104,7 @@ jobs:
 
       # Maybe Deploy the App
       - name: Deploy App
-        if: ${{ steps.package_type.outputs.TPE == "app" }}
+        if: ${{ steps.package_type.outputs.TPE == steps.package_type.outputs.APP }}
         uses: actions/github-script@v3
         with:
           script: |
