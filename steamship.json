@@ -1,8 +1,8 @@
 {
-  "type": "project",
+  "type": "app",
   "name": "blockifier-csv",
   "handle": "blockifier-csv",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "description": "",
   "author": "",
   "public": true,

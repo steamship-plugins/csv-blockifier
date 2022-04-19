@@ -92,7 +92,7 @@ jobs:
         uses: actions/github-script@v3
         with:
           script: |
-              core.setFailed("The package type (${{ steps.package_type.outputs.TYPE }}) must be 'plugin' or 'app' to deploy via this action.")
+              core.setFailed("The package type (${{ steps.package_type.outputs.TPE }}) must be 'plugin' or 'app' to deploy via this action.")
 
       # Maybe Deploy the Plugin
       - name: Deploy Plugin
