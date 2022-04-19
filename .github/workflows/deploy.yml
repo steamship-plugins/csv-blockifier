@@ -23,16 +23,12 @@ on:
 
 jobs:
   test:
-    name: Deploy to Steamship
+    name: Run Unit Tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
-
-      # TESTING
-      # Setup Python (faster than using Python container)
-
       - name: Setup Python
         uses: actions/setup-python@v2
         with:
@@ -53,30 +49,25 @@ jobs:
         run: |
           pytest
   deploy:
+    needs: test
     name: Deploy to Steamship
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-
-      # NOW CHECK THAT steamship.json :: version MATCHES THE TAG
-      # Setup Python (faster than using Python container)
-
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: "14"
-
       - name: Install Steamship CLI
         run: npm install -g @steamship/cli
       - name: Test Ship
-        run: echo `ship`
+        run: ship
       - name: Get the Tag Version
         id: tag_version
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\/v/}
       - name: Get the Package Version
         id: package_version
         run: echo ::set-output name=VERSION::`ship project:get version`
-
       - name: Fail if the tags aren't equal
         if: ${{ steps.tag_version.outputs.VERSION }} != ${{ steps.package_version.outputs.VERSION }}
         uses: actions/github-script@v3
