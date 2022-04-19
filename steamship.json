@@ -1,0 +1,39 @@
+{
+  "type": "plugin",
+  "name": "blockifier-csv",
+  "handle": "blockifier-csv",
+  "version": "0.0.3",
+  "description": "",
+  "author": "",
+  "public": true,
+  "entrypoint": "src.api.handler",
+  "plugin": {
+    "type": "blockifier",
+    "path": "/convert",
+    "isTrainable": false,
+    "configTemplate": {
+      "delimiter": {
+        "type": "string",
+        "default": ","
+      },
+      "quotechar": {
+        "type": "string",
+        "default": "\""
+      },
+      "escapechar": {
+        "type": "string",
+        "default": "\\"
+      },
+      "newline": {
+        "type": "string",
+        "default": "\\n"
+      },
+      "skipinitialspace": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "transport": "jsonOverHttp",
+    "runPath": "/run"
+  }
+}

@@ -1,0 +1,75 @@
+# Deploy to Steamship
+# When a new version is pushed to vXX.XX.XX, first
+# - Run the tests, and then
+# - Deploy the new version to Steamship
+#
+# Requires the GitHub secrets:
+#
+# STEAMSHIP_API_KEY - Your account's API Key
+#
+# And additionally requires a valid steamship.json file.
+#
+# Note that this will use the version number if your GITHUB TAG, not in the steamship.json file.
+name: Deploy to Steamship
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+jobs:
+  test:
+    name: Deploy to Steamship
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+
+      # TESTING
+      # Setup Python (faster than using Python container)
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.x"
+      - name: Install Virtualenv
+        run: |
+          python3 -m venv .venv
+      - name: Activate Virtualenv
+        run: |
+          source .venv/bin/activate
+      - name: Install Dependencies
+        run: |
+          python -m pip install -r requirements.txt
+      - name: Install Development Dependencies
+        run: |
+          python -m pip install -r requirements.dev.txt
+      - name: Run test suite
+        run: |
+          pytest
+
+      # NOW CHECK THAT steamship.json :: version MATCHES THE TAG
+      # Setup Python (faster than using Python container)
+
+      - name: Get the Tag Version
+        id: tag_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      - name: Get the Package Version
+        id: package_version
+        run: echo ::set-output name=VERSION::ship project:get version
+
+      - name: Fail if the tags aren't equal
+        if: ${{ steps.tag_version.outputs.VERSION }} != ${{ steps.package_version.outputs.VERSION }}
+        uses: actions/github-script@v3
+        with:
+          script: |
+              core.setFailed("The tag version (${{ steps.tag_version.outputs.VERSION }}) and the steamship.json version (${{ steps.package_version.outputs.VERSION }}) are different.")
+
+      - name: Fail if the tags are the same, with a different output message.
+        if: ${{ steps.tag_version.outputs.VERSION }} == ${{ steps.package_version.outputs.VERSION }}
+        uses: actions/github-script@v3
+        with:
+          script: |
+              core.setFailed("The tag version (${{ steps.tag_version.outputs.VERSION }}) and the steamship.json version (${{ steps.package_version.outputs.VERSION }}) are the same.")
