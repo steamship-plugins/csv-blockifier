@@ -52,6 +52,11 @@ jobs:
       - name: Run test suite
         run: |
           pytest
+  deploy:
+    name: Deploy to Steamship
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
 
       # NOW CHECK THAT steamship.json :: version MATCHES THE TAG
       # Setup Python (faster than using Python container)
@@ -62,7 +67,7 @@ jobs:
           node-version: "14"
 
       - name: Install Steamship CLI
-        run: npm install @steamship/cli
+        run: npm install -g @steamship/cli
       - name: Test Ship
         run: echo `ship`
       - name: Get the Tag Version
