@@ -1,7 +1,11 @@
 # Deploy to Steamship
 # When a new version is pushed to vXX.XX.XX, first
+#
 # - Run the tests, and then
 # - Deploy the new version to Steamship
+#
+# Note that even though the tag name should start with 'v', the version number will not.
+# E.g. If the version in steamship.json is "0.0.1" then the tag should be "v0.0.1"
 #
 # Requires the GitHub secrets:
 #
@@ -55,10 +59,10 @@ jobs:
 
       - name: Get the Tag Version
         id: tag_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\/v/}
       - name: Get the Package Version
         id: package_version
-        run: echo ::set-output name=VERSION::ship project:get version
+        run: echo ::set-output name=VERSION::`ship project:get version`
 
       - name: Fail if the tags aren't equal
         if: ${{ steps.tag_version.outputs.VERSION }} != ${{ steps.package_version.outputs.VERSION }}
