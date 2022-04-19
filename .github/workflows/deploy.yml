@@ -26,7 +26,6 @@ jobs:
     name: Deploy to Steamship
     runs-on: ubuntu-latest
     timeout-minutes: 10
-
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
@@ -57,6 +56,13 @@ jobs:
       # NOW CHECK THAT steamship.json :: version MATCHES THE TAG
       # Setup Python (faster than using Python container)
 
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "14"
+
+      - name: Install Steamship CLI
+        run: npm install -g @steamship/cli
       - name: Get the Tag Version
         id: tag_version
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\/v/}
