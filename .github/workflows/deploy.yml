@@ -62,7 +62,9 @@ jobs:
           node-version: "14"
 
       - name: Install Steamship CLI
-        run: npm install -g @steamship/cli
+        run: npm install @steamship/cli
+      - name: Test Ship
+        run: echo `ship`
       - name: Get the Tag Version
         id: tag_version
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\/v/}
