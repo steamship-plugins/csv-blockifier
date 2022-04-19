@@ -1,19 +1,3 @@
-# Deploy to Steamship
-# When a new version is pushed to vXX.XX.XX, first
-#
-# - Run the tests, and then
-# - Deploy the new version to Steamship
-#
-# Note that even though the tag name should start with 'v', the version number will not.
-# E.g. If the version in steamship.json is "0.0.1" then the tag should be "v0.0.1"
-#
-# Requires the GitHub secrets:
-#
-# STEAMSHIP_API_KEY - Your account's API Key
-#
-# And additionally requires a valid steamship.json file.
-#
-# Note that this will use the version number if your GITHUB TAG, not in the steamship.json file.
 name: Deploy to Steamship
 
 on:
@@ -23,89 +7,11 @@ on:
 
 jobs:
   deploy:
-    name: Test & Deploy to Steamship
+    name: Deploy to Steamship
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Check out repository code
-        uses: actions/checkout@v2
-      - name: Setup Python
-        uses: actions/setup-python@v2
+      - name: Deploy to Steamship
+        uses: steamship-core/deploy-to-steamship@master
         with:
-          python-version: "3.x"
-      - name: Install Virtualenv
-        run: |
-          python3 -m venv .venv
-      - name: Activate Virtualenv
-        run: |
-          source .venv/bin/activate
-      - name: Install Dependencies
-        run: |
-          python -m pip install -r requirements.txt
-      - name: Install Development Dependencies
-        run: |
-          python -m pip install -r requirements.dev.txt
-      - name: Run test suite
-        run: |
-          pytest
-      - name: Setup Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: "14"
-      - name: Install Steamship CLI
-        run: npm install -g @steamship/cli
-
-      # Sanity Check:
-      #   If the STEAMSHIP_API_KEY variable isn't present, the output of this step will help debug that.
-      - name: Test Steamship Authentication
-        run: ship user:info
-
-      # Sanity Check:
-      #   Tag Version should match Steamship.json version
-      - name: Get Tag Versions
-        id: versions
-        run: |
-          TAG_VERSION=${GITHUB_REF/refs\/tags\/v/}
-          PKG_VERSION=`ship project:get version`
-          echo "::set-output name=TAG::$TAG_VERSION"
-          echo "::set-output name=PKG::$PKG_VERSION"
-      - name: Fail if the tags aren't equal
-        if: ${{ (!(steps.versions.outputs.TAG == steps.versions.outputs.PKG)) }}
-        uses: actions/github-script@v3
-        with:
-          script: |
-              core.setFailed("The tag version (${{ steps.versions.outputs.TAG }}) and the steamship.json version (${{ steps.versions.outputs.PKG }}) are different.")
-
-      # Sanity Check:
-      #   Steamship.json type should be plugin or app
-      - name: Get the Package Type
-        id: package_type
-        run: |
-          PKG_TYPE=`ship project:get type`
-          TYPE_PLG=plugin
-          TYPE_APP=app
-          echo "::set-output name=TPE::$PKG_TYPE"
-          echo "::set-output name=PLG::$TYPE_PLG"
-          echo "::set-output name=APP::$TYPE_APP"
-      - name: Require valid type
-        if: ${{ (!((steps.package_type.outputs.TPE == steps.package_type.outputs.PLG) || (steps.package_type.outputs.TPE == steps.package_type.outputs.APP))) }}
-        uses: actions/github-script@v3
-        with:
-          script: |
-              core.setFailed("The package type (${{ steps.package_type.outputs.TPE }}) must be 'plugin' or 'app' to deploy via this action.")
-
-      # Maybe Deploy the Plugin
-      - name: Deploy Plugin
-        if: ${{ steps.package_type.outputs.TPE == steps.package_type.outputs.PLG }}
-        uses: actions/github-script@v3
-        with:
-          script: |
-              core.setFailed("Deploy Plugin")
-
-      # Maybe Deploy the App
-      - name: Deploy App
-        if: ${{ steps.package_type.outputs.TPE == steps.package_type.outputs.APP }}
-        uses: actions/github-script@v3
-        with:
-          script: |
-              core.setFailed("Deploy App")
+          steamship_key: ${{ secrets.STEAMSHIP_KEY }}

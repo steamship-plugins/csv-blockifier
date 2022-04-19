@@ -2,7 +2,7 @@
   "type": "plugin",
   "name": "blockifier-csv",
   "handle": "blockifier-csv",
-  "version": "0.0.19",
+  "version": "0.0.21",
   "description": "",
   "author": "",
   "public": true,
