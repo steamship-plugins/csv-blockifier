@@ -5,14 +5,14 @@ from steamship.app import App, Response, post, create_handler
 from steamship.plugin.converter import Converter
 from steamship.plugin.service import PluginResponse, PluginRequest
 from steamship.base.error import SteamshipError
-from steamship.base import MimeTypes
 from steamship.data.block import Block
 from steamship.data.file import File
-from steamship.data.tags import TagKind, DocTag, Tag
+from steamship.data.tags import Tag
 from steamship.plugin.inputs.raw_data_plugin_input import RawDataPluginInput
 from steamship.plugin.outputs.block_and_tag_plugin_output import BlockAndTagPluginOutput
 import csv
 import io
+from typing import Union
 
 class CsvBlockifierPlugin(Converter, App):
     """"Converts CSV or TSV into Tagged Steamship Blocks."""
@@ -20,7 +20,7 @@ class CsvBlockifierPlugin(Converter, App):
     def __init__(self, client=None, config=None):
         self.config = config
 
-    def run(self, request: PluginRequest[RawDataPluginInput]) -> PluginResponse[BlockAndTagPluginOutput]:
+    def run(self, request: PluginRequest[RawDataPluginInput]) -> Union[Response, PluginResponse[BlockAndTagPluginOutput]]:
         if request is None or request.data is None or request.data.data is None:
             return Response(error=SteamshipError(
                 message="Missing data field on the incoming request."
@@ -31,11 +31,12 @@ class CsvBlockifierPlugin(Converter, App):
                 message="The incoming data was not of expected String type"
             ))
 
-        delimiter = self.config.get('delimiter', ',')
-        quotechar = self.config.get('quotechar', '"')
-        escapechar = self.config.get('escapechar', '\\')
-        newline = self.config.get('newline', '\\n')
-        skipinitialspace = self.config.get('skipinitialspace', False)
+        # The `.get` provides defaulting for undefined values, the `or` provides default for value==None
+        delimiter = self.config.get('delimiter', ',') or ','
+        quotechar = self.config.get('quotechar', '"') or '"'
+        escapechar = self.config.get('escapechar', '\\') or '\\'
+        newline = self.config.get('newline', '\\n') or '\\n'
+        skipinitialspace = self.config.get('skipinitialspace', False) or False
 
         text_column = self.config.get('text_column', None)
         tag_columns = self.config.get('tag_columns', [])
@@ -93,8 +94,8 @@ class CsvBlockifierPlugin(Converter, App):
 
         return PluginResponse(data=BlockAndTagPluginOutput(file=file))
 
-    @post('convert')
-    def convert(self, **kwargs) -> Response:
+    @post('blockify')
+    def blockify(self, **kwargs) -> Response:
         """App endpoint for our plugin.
 
         The `run` method above implements the Plugin interface for a Converter.
