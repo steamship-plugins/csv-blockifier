@@ -47,7 +47,7 @@ def _check_normal_response(file, tag1: bool, tag2: bool, kind: str):
             assert(file.blocks[i].tags is not None)
             assert(len(file.blocks[i].tags) == 0)
 
-def test_variation(tag1: bool, tag2: bool, kind: str, dilem: str):
+def _check_variation(tag1: bool, tag2: bool, kind: str, dilem: str):
     if dilem == "csv":
         filename = "normal.csv"
         dilemeter = None # Test the default
@@ -84,5 +84,5 @@ def test_basic_variations():
             for kind in [None, "SomeKind"]:
                 for dilemeter in ["csv", "tsv"]:
                     print(tag1, tag2, kind, dilemeter)
-                    test_variation(tag1, tag2, kind, dilemeter)
+                    _check_variation(tag1, tag2, kind, dilemeter)
 
