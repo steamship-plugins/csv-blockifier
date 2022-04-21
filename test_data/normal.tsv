@@ -1,0 +1,7 @@
+ID	Text	Tag	Something
+001	Hi there	A
+002	Hi there	B	Foo
+003	Hi "there	C	Bar
+004	Hi \\nthere	D	Foo
+005	Hi \\nthere
+006		Yar	Baz

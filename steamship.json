@@ -1,15 +1,15 @@
 {
   "type": "plugin",
-  "name": "blockifier-csv",
-  "handle": "blockifier-csv",
+  "name": "csv-blockifier",
+  "handle": "csv-blockifier",
   "version": "0.0.23",
-  "description": "",
-  "author": "",
+  "description": "Converts CSV or TSV files into tagged blocks.",
+  "author": "Steamship Team",
   "public": true,
   "entrypoint": "src.api.handler",
   "plugin": {
     "type": "blockifier",
-    "path": "/convert",
+    "path": "/blockify",
     "isTrainable": false,
     "configTemplate": {
       "delimiter": {

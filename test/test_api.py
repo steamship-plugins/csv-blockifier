@@ -47,18 +47,42 @@ def _check_normal_response(file, tag1: bool, tag2: bool, kind: str):
             assert(file.blocks[i].tags is not None)
             assert(len(file.blocks[i].tags) == 0)
 
-def test_two_tags():
+def _check_variation(tag1: bool, tag2: bool, kind: str, dilem: str):
+    if dilem == "csv":
+        filename = "normal.csv"
+        dilemeter = None # Test the default
+    elif dilem == "tsv":
+        filename = "normal.tsv"
+        dilemeter = "\t"
+    else:
+        assert("Error: unknown dilem value" == True)
+
+    tag_cols = []
+    if tag1:
+        tag_cols.append(TEST_HEADERS[2])
+    if tag2:
+        tag_cols.append(TEST_HEADERS[3])
+
     converter = CsvBlockifierPlugin(config=dict(
-        delimiter=",",
+        delimiter=dilemeter,
         text_column=TEST_HEADERS[1],
-        tag_columns=TEST_HEADERS[2:3],
-        tag_kind=None
+        tag_columns=tag_cols,
+        tag_kind=kind
     ))
-    csv = _read_test_file('normal.csv')
-    request = PluginRequest(data=RawDataPluginInput(data=csv))
+    data = _read_test_file(filename)
+    request = PluginRequest(data=RawDataPluginInput(data=data))
     response = converter.run(request)
 
     assert(response.error is None)
     assert(response.data is not None)
-    _check_normal_response(response.data.file, tag1=True, tag2=False, kind=None)
-    
+    _check_normal_response(response.data.file, tag1=tag1, tag2=tag2, kind=kind)
+
+
+def test_basic_variations():
+    for tag1 in [True, False]:
+        for tag2 in [True, False]:
+            for kind in [None, "SomeKind"]:
+                for dilemeter in ["csv", "tsv"]:
+                    print(tag1, tag2, kind, dilemeter)
+                    _check_variation(tag1, tag2, kind, dilemeter)
+
