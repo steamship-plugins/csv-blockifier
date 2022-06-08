@@ -19,12 +19,12 @@ jobs:
         run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
         id: extract_branch
       - name: Deploy to Steamship [Production]
-        if: ${{ (!(steps.extract_branch.outputs.branch == "staging")) }}
+        if: ${{ (!(steps.extract_branch.outputs.branch == 'staging')) }}
         uses: steamship-core/deploy-to-steamship@main
         with:
           steamship_key: ${{ secrets.STEAMSHIP_KEY }}
       - name: Deploy to Steamship [Staging]
-        if: ${{ (steps.extract_branch.outputs.branch == "staging") }}
+        if: ${{ (steps.extract_branch.outputs.branch == 'staging') }}
         uses: steamship-core/deploy-to-steamship@main
         with:
           steamship_key: ${{ secrets.STEAMSHIP_KEY_STAGING }}
