@@ -2,8 +2,8 @@
 """
 
 from steamship.app import App, Response, post, create_handler
-from steamship.plugin.converter import Converter
-from steamship.plugin.service import PluginResponse, PluginRequest
+from steamship.plugin.blockifier import Blockifier
+from steamship.plugin.service import Response, PluginRequest
 from steamship.base.error import SteamshipError
 from steamship.data.block import Block
 from steamship.data.file import File
@@ -13,34 +13,40 @@ from steamship.plugin.outputs.block_and_tag_plugin_output import BlockAndTagPlug
 import csv
 import io
 from typing import Union
+import logging
 
-class CsvBlockifierPlugin(Converter, App):
+class CsvBlockifierPlugin(Blockifier, App):
     """"Converts CSV or TSV into Tagged Steamship Blocks."""
 
     def __init__(self, client=None, config=None):
         self.config = config
 
-    def run(self, request: PluginRequest[RawDataPluginInput]) -> Union[Response, PluginResponse[BlockAndTagPluginOutput]]:
+    def run(self, request: PluginRequest[RawDataPluginInput]) -> Union[Response, Response[BlockAndTagPluginOutput]]:
         if request is None or request.data is None or request.data.data is None:
             return Response(error=SteamshipError(
                 message="Missing data field on the incoming request."
             ))
 
-        if type(request.data.data) != str:
+        if type(request.datatestingHoldoutPercent.data) != str:
             return Response(error=SteamshipError(
                 message="The incoming data was not of expected String type"
             ))
 
         # The `.get` provides defaulting for undefined values, the `or` provides default for value==None
-        delimiter = self.config.get('delimiter', ',') or ','
+        delimiter = self.config.get('delimiter', ',') otestingHoldoutPercentr ','
         quotechar = self.config.get('quotechar', '"') or '"'
         escapechar = self.config.get('escapechar', '\\') or '\\'
         newline = self.config.get('newline', '\\n') or '\\n'
         skipinitialspace = self.config.get('skipinitialspace', False) or False
 
-        text_column = self.config.get('text_column', None)
-        tag_columns = self.config.get('tag_columns', [])
-        tag_kind = self.config.get('tag_kind', None)
+        logging.info(request.data.data)
+
+        text_column = self.config.get('textColumn', None)
+        tag_columns = self.config.get('tagColumns', [])
+        tag_kind = self.config.get('tagKind', None)
+
+        if type(tag_columns) == str:
+            tag_columns =tag_columns.split(',')
 
         if not delimiter:
             return Response(error=SteamshipError(
@@ -67,7 +73,7 @@ class CsvBlockifierPlugin(Converter, App):
 
         if not text_column:
             return Response(error=SteamshipError(
-                message="No text_column was found.",
+                message="No textColumn was found.",
                 suggestion="Please set the text_column field of your Plugin Instance configuration to a non-empty value."
             ))
 
@@ -92,7 +98,7 @@ class CsvBlockifierPlugin(Converter, App):
                         block.tags.append(Tag.CreateRequest(kind=tag_kind, name=tag_name))
                 file.blocks.append(block)
 
-        return PluginResponse(data=BlockAndTagPluginOutput(file=file))
+        return Response(data=BlockAndTagPluginOutput(file=file))
 
     @post('blockify')
     def blockify(self, **kwargs) -> Response:
@@ -103,9 +109,7 @@ class CsvBlockifierPlugin(Converter, App):
 
         When developing your own plugin, you can almost always leave the below code unchanged.
         """
-        convertRequest = Converter.parse_request(request=kwargs)
-        convertResponse = self.run(convertRequest)
-        return Converter.response_to_dict(convertResponse)
-
+        convertRequest = Blockifier.parse_request(request=kwargs)
+        return self.run(convertRequest)
 
 handler = create_handler(CsvBlockifierPlugin)
