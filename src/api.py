@@ -1,115 +1,93 @@
 """CSV Blockifier - Steamship Plugin.
 """
 
-from steamship.app import App, Response, post, create_handler
-from steamship.plugin.blockifier import Blockifier
-from steamship.plugin.service import Response, PluginRequest
+import csv
+import io
+import logging
+from typing import Union, List, Optional, Type
+
+from steamship.app import App, create_handler
 from steamship.base.error import SteamshipError
 from steamship.data.block import Block
 from steamship.data.file import File
 from steamship.data.tags import Tag
+from steamship.plugin.blockifier import Blockifier, Config
 from steamship.plugin.inputs.raw_data_plugin_input import RawDataPluginInput
 from steamship.plugin.outputs.block_and_tag_plugin_output import BlockAndTagPluginOutput
-import csv
-import io
-from typing import Union
-import logging
+from steamship.plugin.service import Response, PluginRequest
+from pydantic import constr
+
 
 class CsvBlockifierPlugin(Blockifier, App):
     """"Converts CSV or TSV into Tagged Steamship Blocks."""
 
-    def __init__(self, client=None, config=None):
-        self.config = config
+    class CsvBlockifierConfig(Config):
+        text_column: str
+        tag_columns: List[str]
+        tag_kind: str = None
+        delimiter: Optional[str] = ","
+        quotechar: Optional[constr(max_length=1)] = '"'
+        escapechar: Optional[constr(max_length=1)] = "\\"
+        newline: Optional[str] = "\\n"
+        skipinitialspace: Optional[bool] = False
 
-    def run(self, request: PluginRequest[RawDataPluginInput]) -> Union[Response, Response[BlockAndTagPluginOutput]]:
+        def __init__(self, **kwargs):
+            if isinstance(kwargs.get("tag_columns", None), str):
+                kwargs["tag_columns"] = kwargs["tag_columns"].split(",")
+            super().__init__(**kwargs)
+
+    def config_cls(self) -> Type[CsvBlockifierConfig]:
+        return self.CsvBlockifierConfig
+
+    def _get_text(self, row) -> str:
+        text = row.get(self.config.text_column)
+        if text:
+            text = text.replace(self.config.newline, "\n")
+        return text
+
+    def _get_tags(self, row) -> List[str]:
+        tag_values = []
+        for tag_column in self.config.tag_columns:
+            tag_value = row.get(tag_column)
+            if tag_value:
+                tag_values.append(tag_value.replace(self.config.newline, "\n"))
+        return tag_values
+
+    def run(
+        self, request: PluginRequest[RawDataPluginInput]
+    ) -> Union[Response, Response[BlockAndTagPluginOutput]]:
+
         if request is None or request.data is None or request.data.data is None:
-            return Response(error=SteamshipError(
-                message="Missing data field on the incoming request."
-            ))
+            raise SteamshipError(message="Missing data field on the incoming request.")
 
-        if type(request.datatestingHoldoutPercent.data) != str:
-            return Response(error=SteamshipError(
-                message="The incoming data was not of expected String type"
-            ))
+        data = request.data.data
+        if isinstance(data, bytes):
+            data = data.decode("utf-8")
 
-        # The `.get` provides defaulting for undefined values, the `or` provides default for value==None
-        delimiter = self.config.get('delimiter', ',') otestingHoldoutPercentr ','
-        quotechar = self.config.get('quotechar', '"') or '"'
-        escapechar = self.config.get('escapechar', '\\') or '\\'
-        newline = self.config.get('newline', '\\n') or '\\n'
-        skipinitialspace = self.config.get('skipinitialspace', False) or False
-
-        logging.info(request.data.data)
-
-        text_column = self.config.get('textColumn', None)
-        tag_columns = self.config.get('tagColumns', [])
-        tag_kind = self.config.get('tagKind', None)
-
-        if type(tag_columns) == str:
-            tag_columns =tag_columns.split(',')
-
-        if not delimiter:
-            return Response(error=SteamshipError(
-                message="An empty delimiter was found.",
-                suggestion="Please set the delimiter field of your Plugin Instance configuration to a non-empty value."
-            ))
-
-        if not escapechar:
-            return Response(error=SteamshipError(
-                message="An empty escapechar was found.",
-                suggestion="Please set the escapechar field of your Plugin Instance configuration to a non-empty value."
-            ))
-
-        if not quotechar:
-            return Response(error=SteamshipError(
-                message="An empty quotechar was found.",
-                suggestion="Please set the quotechar field of your Plugin Instance configuration to a non-empty value."
-            ))
-
-        if len(quotechar) > 1:
-            return Response(error=SteamshipError(message="quotechar should be a single character."))
-        if len(escapechar) > 1:
-            return Response(error=SteamshipError(message="escapechar should be a single character."))
-
-        if not text_column:
-            return Response(error=SteamshipError(
-                message="No textColumn was found.",
-                suggestion="Please set the text_column field of your Plugin Instance configuration to a non-empty value."
-            ))
+        if not isinstance(data, str):
+            raise SteamshipError(message="The incoming data was not of expected String type")
 
         reader = csv.DictReader(
-            io.StringIO(request.data.data),
-            delimiter=delimiter,
-            quotechar=quotechar,
-            escapechar=escapechar,
-            skipinitialspace=skipinitialspace
+            io.StringIO(data),
+            delimiter=self.config.delimiter,
+            quotechar=self.config.quotechar,
+            escapechar=self.config.escapechar,
+            skipinitialspace=self.config.skipinitialspace,
         )
-
-        file = File(blocks=[])
+        file = File.CreateRequest(blocks=[])
         for row in reader:
-            text = row.get(text_column, None)
-            if text:
-                text = text.replace(newline, '\n')
-                block = Block.CreateRequest(text=text, tags=[])
-                for tag_column in tag_columns:
-                    tag_name = row.get(tag_column, None)
-                    if tag_name:
-                        tag_name = tag_name.replace(newline, '\n')
-                        block.tags.append(Tag.CreateRequest(kind=tag_kind, name=tag_name))
-                file.blocks.append(block)
+            text = self._get_text(row)
+            tag_values = self._get_tags(row)
+
+            block = Block.CreateRequest(
+                text=text,
+                tags=[
+                    Tag.CreateRequest(kind=self.config.tag_kind, name=tag_value)
+                    for tag_value in tag_values
+                ],
+            )
+            file.blocks.append(block)
 
         return Response(data=BlockAndTagPluginOutput(file=file))
-
-    @post('blockify')
-    def blockify(self, **kwargs) -> Response:
-        """App endpoint for our plugin.
-
-        The `run` method above implements the Plugin interface for a Converter.
-        This `convert` method exposes it over an HTTP endpoint as a Steamship App.
-
-        When developing your own plugin, you can almost always leave the below code unchanged.
-        """
-        convertRequest = Blockifier.parse_request(request=kwargs)
-        return self.run(convertRequest)
 
 handler = create_handler(CsvBlockifierPlugin)
