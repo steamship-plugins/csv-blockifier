@@ -2,11 +2,20 @@
 
 This repository auto-deploys to Steamship when new versions are pushed.
 
-* Pushing to `main` deploys to your production account on `api.steamship.com`
-* Pushing to `vA.B.C` deploys to your production account on `api.steamship.com`
-* Pushing to `staging` deploys to your staging account (if configured)
+Production Deployments occur upon:
+* Pushes to `main`
+* Pushes to any SemVer-style tag, prefixed with `v` (`vA.B.C`)
 
-That deployment is parameterized by the following information:
+Staging deployments occur upon:
+* Pushes to branch `staging`
+
+When pushing to a SemVer-style tag, the tag's version must match the version contained within `steamship.json`.
+
+New versions of a Steamship App or Plugin automatically become the "default" version. Unless an instance specifically requests a version, this default version will be used. 
+
+## Deployment Setup
+
+Automated deployments are parameterized by the following information:
 
 * The `handle` property of `steamship.json`
 * The `version` property of `steamship.json`
@@ -15,15 +24,19 @@ That deployment is parameterized by the following information:
 * The `STEAMSHIP_KEY_STAGING` GitHub repository secret
 * The `STEAMSHIP_API_BASE_STAGING` GitHub repository secret (optional)
 
-With this automated deployment flow, the version released to Steamship will be auto-flagged as the default version regardless of the version handle! New instances of your app or plugin will default to it unless a specific version was explicitly requested during their instantiation.
-
-## Staging Strategy
+## Staging setup
 
 If you fork this repository and would like to establish your own staging workflow, we suggest the following workflow:
 
 1. Creating a second Steamship account to act as your staging account. For example `acme_staging`, if your account is `acme`
 2. Set the `STEAMSHIP_KEY_STAGING` GitHub secret to the API Key of that account
 3. Leave the `STEAMSHIP_API_BASE_STAGING` GitHub secret blank; it will default to the appropriate API endpoint.
+
+## Modifying or disabling automated deployments
+
+Automated deployment is triggered by the GitHub Actions workflow in `.github/workflows/deploy.yml`. This file, in turn, invokes the `steamship-core/deploy-to-steamship@main` action.
+
+To modify or disable automated deployments, remove, comment out, or modify that file.
 
 ## Troubleshooting
 
@@ -36,3 +49,7 @@ This means the version specified in `steamship.json` has already been registered
 This means you have tried to push a branch with a semver-style tag (like `v1.2.3`), resulting in a version deployment whose name must match that tag without the `v` prefix (`1.2.3`). Make sure the version field of `steamship.json` matches this string.
 
 For example, if you are deploying branch `v6.0.0`, the `version` field of your `steamship.json` file must be `6.0.0`
+
+### The deployment fails with an authentication error
+
+Make sure you're set your `STEAMSHIP_KEY` in your GitHub secrets.
