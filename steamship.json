@@ -1,38 +1,46 @@
 {
   "type": "plugin",
-  "name": "csv-blockifier",
   "handle": "csv-blockifier",
   "version": "0.0.23",
   "description": "Converts CSV or TSV files into tagged blocks.",
   "author": "Steamship Team",
   "public": true,
   "entrypoint": "src.api.handler",
+  "configTemplate": {
+    "delimiter": {
+      "type": "string",
+      "default": ","
+    },
+    "quotechar": {
+      "type": "string",
+      "default": "\""
+    },
+    "escapechar": {
+      "type": "string",
+      "default": "\\"
+    },
+    "newline": {
+      "type": "string",
+      "default": "\\n"
+    },
+    "skipinitialspace": {
+      "type": "boolean",
+      "default": false
+    },
+    "textColumn": {
+      "type": "string"
+    },
+    "tagColumns": {
+      "type": "string"
+    },
+    "tagKind": {
+      "type": "string"
+    }
+  },
   "plugin": {
     "type": "blockifier",
     "path": "/blockify",
     "isTrainable": false,
-    "configTemplate": {
-      "delimiter": {
-        "type": "string",
-        "default": ","
-      },
-      "quotechar": {
-        "type": "string",
-        "default": "\""
-      },
-      "escapechar": {
-        "type": "string",
-        "default": "\\"
-      },
-      "newline": {
-        "type": "string",
-        "default": "\\n"
-      },
-      "skipinitialspace": {
-        "type": "boolean",
-        "default": false
-      }
-    },
     "transport": "jsonOverHttp",
     "runPath": "/run"
   }
