@@ -40,3 +40,6 @@ jobs:
       - name: Run test suite
         run: |
           pytest
+        env:
+          STEAMSHIP_API_KEY: ${{ inputs.steamship_key_test }}
+          STEAMSHIP_API_BASE: ${{ inputs.steamship_api_base_test }}

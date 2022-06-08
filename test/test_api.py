@@ -47,7 +47,7 @@ def _check_normal_response(file, tag1: bool, tag2: bool, kind: str):
             assert(file.blocks[i].tags is not None)
             assert(len(file.blocks[i].tags) == 0)
 
-def _check_variation(tag1: bool, tag2: bool, kind: str, dilem: str):
+def _check_variation(tag1: bool, tag2: bool, kind: str, dilem: str, tag_cols_as_str: bool):
     if dilem == "csv":
         filename = "normal.csv"
         dilemeter = None # Test the default
@@ -63,11 +63,15 @@ def _check_variation(tag1: bool, tag2: bool, kind: str, dilem: str):
     if tag2:
         tag_cols.append(TEST_HEADERS[3])
 
+    # Temporary hack until we have array types in config block
+    if tag_cols_as_str:
+        tag_cols = ",".join(tag_cols)
+
     converter = CsvBlockifierPlugin(config=dict(
         delimiter=dilemeter,
-        text_column=TEST_HEADERS[1],
-        tag_columns=tag_cols,
-        tag_kind=kind
+        textColumn=TEST_HEADERS[1],
+        tagColumns=tag_cols,
+        tagKind=kind
     ))
     data = _read_test_file(filename)
     request = PluginRequest(data=RawDataPluginInput(data=data))
@@ -83,6 +87,6 @@ def test_basic_variations():
         for tag2 in [True, False]:
             for kind in [None, "SomeKind"]:
                 for dilemeter in ["csv", "tsv"]:
-                    print(tag1, tag2, kind, dilemeter)
-                    _check_variation(tag1, tag2, kind, dilemeter)
+                    for tag_cols_as_str in [True, False]:
+                        _check_variation(tag1, tag2, kind, dilemeter, tag_cols_as_str)
 
