@@ -14,7 +14,7 @@ On your local machine, these tests will run using the `STEAMSHIP_API_KEY` enviro
 
 ## Automated testing
 
-This repository is configured to auto-test upon pushes and pull-requests to the `main` and `staging` branches.
+This repository is configured to auto-test upon pull-requests to the `main` and `staging` branches. Testing will also be performed as part of the automated deployment (see `DEPLOYING.md`)
 
 * Failing tests are will block any automated deployments
 * We recommend configuring your repository to block pull-request merges unless a passing test has been registered
