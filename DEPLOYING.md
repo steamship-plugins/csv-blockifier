@@ -37,6 +37,10 @@ Automated deployments are parameterized by the following information:
 * The `STEAMSHIP_KEY_STAGING` GitHub repository secret
 * The `STEAMSHIP_API_BASE_STAGING` GitHub repository secret (optional)
 
+Setting the following variable will additionally trigger Slack notifications upon automated deployments:
+
+* The `STEAMSHIP_SLACK_DEPLOYMENT_WEBHOOK` Slack notification webhook URL (optional)
+
 ## Staging setup
 
 If you fork this repository and would like to establish your own staging workflow, we suggest the following workflow:
